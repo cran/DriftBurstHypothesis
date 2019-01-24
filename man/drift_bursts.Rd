@@ -23,31 +23,31 @@ A \code{numeric} containing the logarithm of the prices of the asset.
 A \code{numeric} containing the times at which to calculate the tests. The standard of \code{seq(floor(min(time)), ceiling(max(time)), 60)} denotes calculating the test-statistic once per minute, i.e. 391 times for a typical 6.5 hour trading day.
 }
   \item{PreAverage}{
-An \code{integer} denoting the period for pre-averaging estimates of the log-prices.
+An \code{integer} denoting the period for pre-averaging estimates of the log-prices. 
 }
   \item{AcLag}{
 An \code{integer} denoting which lag is to be used for the HAC estimator of the variance - the standard of \code{-1} denotes using an automatic lag selection algorithm.
 }
   \item{Mean_bandwidth}{
-An \code{integer} denoting the bandwidth for the exponential kernel for the mean.
+An \code{integer} denoting the bandwidth for the left-sided exponential kernel for the mean.
 }
   \item{Variance_bandwidth}{
-An \code{integer} denoting the bandwidth for the exponential kernel for the variance.
+An \code{integer} denoting the bandwidth for the left-sided exponential kernel for the variance.
 }
   \item{bParallelize}{
-A \code{Boolean} to determine whether to parallelize the underlying C++ code. 
+A \code{Boolean} to determine whether to parallelize the underlying C++ code. (Using OpenMP)
 }
 \item{iCores}{
 An \code{integer} denoting the number of cores to use for calculating the code when paralellized.
-  }
+If this argument is not provided, sequential evaluation will be used even though \code{bParallelize} is TRUE}
 }
 \details{
 The DBH test statistic cannot be calculated before 1 period of testtimes has passed.
 
-The test statistic is unstable before \code{max(Mean_bandwidth , Variance_bandwidth)}
+The test statistic is unstable before \code{max(Mean_bandwidth , Variance_bandwidth)} seconds has passed.
 }
 \value{
-A list containing the series of the drift burst hypothesis test-statistic as well as the estimated mean and variance series.
+A list containing the series of the drift burst hypothesis test-statistic as well as the estimated local mean and variance series.
 }
 \references{
 Christensen, Oomen and Reno (2018) <DOI:10.2139/ssrn.2842535>.
@@ -57,7 +57,6 @@ Emil Sjoerup
 }
 
 \examples{
-
 #Simulate from a stochastic volatility model.
 #Both a flash crash and flash rally are coded into the function.
 StochasticVolatilitySim = function(iT, dSigma, dPhi, dMu){
@@ -99,8 +98,7 @@ vY = 500+cumsum(StochasticVolatilitySim(iT, dSigma, dPhi, dMu))
 #insert an outlier to illustrate robustness.
 vY[50000] = 500
 
-#Here, the observations are equidistant, but the code can handle 
-#unevenly spaced observations.
+#Here, the observations are equidistant, but the code can handle unevenly spaced observations.
 timestamps = seq(34200 , 57600 , length.out = iT)
 testtimes = seq(34200, 57600, 60)
 logprices = log(vY)
