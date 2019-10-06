@@ -10,7 +10,6 @@ plot.DBH = function(x, ...){
   # for (i in 1:length(opt)) {
   #   assign(names(opt)[i], opt[[i]])
   # }
-
   #### Extract options (better way to do it?)  #I will test above method when I get time.
   which      = tolower(opt$which)
   startTime  = opt$startTime

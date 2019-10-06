@@ -25,7 +25,7 @@ const double dC = 2.6614;
 arma::vec HACWeightC(int iLag){ 
   // Input will always be non-zero and positive, thus, we can ignore the 0 case and save some time
   vec vW = linspace(1, iLag,iLag) / iLag;
-  int iIdx = floor(iLag/2);
+  int iIdx = floor(iLag/2.0);
   vW(span(0,iIdx-1)) = 1-6*square(vW(span(0,iIdx-1))) + 6 * pow(vW(span(0,iIdx-1)), 3);
   vW(span(iIdx, iLag-1)) = 2 * pow(1 - vW(span(iIdx, iLag-1)), 3);
   return(vW);
