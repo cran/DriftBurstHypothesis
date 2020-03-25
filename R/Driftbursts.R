@@ -1,10 +1,11 @@
 driftBursts = function(timestamps = NULL, logPrices, testTimes = seq(34260, 57600, 60),
                        preAverage = 5, ACLag = -1L, meanBandwidth = 300L, 
-                       varianceBandwidth = 900L, parallelize = FALSE, nCores = NA, warnings = TRUE){
+                       varianceBandwidth = 900L, sessionStart = 34200, sessionEnd = 57600,
+                       parallelize = FALSE, nCores = NA, warnings = TRUE){
 
   #########  Initialization  ############
   k                    = preAverage 
-  vX                   = diff(logPrices)
+  vDiff                = diff(logPrices)
   iT                   = length(logPrices)
   xts                  = FALSE
   pad = removedFromEnd = 0
@@ -33,7 +34,7 @@ driftBursts = function(timestamps = NULL, logPrices, testTimes = seq(34260, 5760
     vIndex          = as.POSIXct((.indexDate(logPrices)[1] * 86400) + testTimes, origin = "1970-01-01", tz = tz)
     logPrices       = as.numeric(logPrices)
     #logPrices       = as.numeric(t(logPrices)) ##need to transpose, otherwise the program will crash.
-    vX              = as.numeric(vX)[-1] ### need to remove first entry because diff() on an xts object produces NA in first entry.
+    vDiff              = as.numeric(vDiff)[-1] ### need to remove first entry because diff() on an xts object produces NA in first entry.
     xts             = TRUE
   }
   if((anyNA(timestamps) & !is.null(timestamps)) | anyNA(logPrices) | anyNA(testTimes)){
@@ -83,16 +84,16 @@ driftBursts = function(timestamps = NULL, logPrices, testTimes = seq(34260, 5760
   }
   ###Checks end###
   
-
   vpreAveraged         = rep(0, iT - 1)
   vpreAveraged[(k*2 - 1):(iT - 1)] = cfilter(x = logPrices, c(rep(1,k),rep( -1,k)))[k:(iT - k)]
   if(parallelize & !is.na(nCores)){ #Parallel evaluation or not?
-    lDriftBursts = DriftBurstLoopCPAR(vpreAveraged, vX, timestamps, testTimes, meanBandwidth, 
+    lDriftBursts = DriftBurstLoopCPAR(vpreAveraged, vDiff, timestamps, testTimes, meanBandwidth, 
                                      varianceBandwidth, preAverage, ACLag, nCores)
   }else{
-    lDriftBursts = DriftBurstLoopC(vpreAveraged, vX, timestamps, testTimes, meanBandwidth, 
+    lDriftBursts = DriftBurstLoopC(vpreAveraged, vDiff, timestamps, testTimes, meanBandwidth, 
                                   varianceBandwidth, preAverage, ACLag)  
   }
+
 
 
   if(pad != 0 | removedFromEnd != 0){
@@ -108,7 +109,7 @@ driftBursts = function(timestamps = NULL, logPrices, testTimes = seq(34260, 5760
   }
   
   lInfo = list("varianceBandwidth" = varianceBandwidth, "meanBandwidth" = meanBandwidth,"preAverage" = preAverage,
-               "nObs" = iT, "testTimes" = tt, "padding" = c(pad, removedFromEnd))
+               "nObs" = iT, "testTimes" = tt, "padding" = c(pad, removedFromEnd), "sessionStart" = sessionStart, "sessionEnd" = sessionEnd)
   lDriftBursts[["info"]] = lInfo
   #replace NANs with 0's
   NANS = is.nan(lDriftBursts[["sigma"]])
