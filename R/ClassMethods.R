@@ -35,8 +35,6 @@ plot.DBH = function(x, ...){
          CasE doesn't matter.")
   }
   if(inherits(tstat, "xts")){
-    testTimes = index(tstat)
-    testTimes = as.numeric(testTimes) - (.indexDate(tstat)[1] * 86400)
     tstat     = as.numeric(tstat)
     sigma     = as.numeric(sigma)
     mu        = as.numeric(mu)

@@ -50,10 +50,10 @@ driftBursts = function(timestamps = NULL, logPrices, testTimes = seq(34260, 5760
   }
     parallelize = FALSE
   }
-  if(min(timestamps) >= min(testTimes)){
+  if(min(timestamps) + 5 >= min(testTimes)){ ## Safeguard to prevent faulty inputs that causes crashes!
     testTimes = testTimes[-1]
     pad = 1
-    while(min(timestamps) > min(testTimes)){
+    while(min(timestamps) + 5 >= min(testTimes)){
       testTimes = testTimes[-1] 
       pad = pad + 1
     }
@@ -62,11 +62,18 @@ driftBursts = function(timestamps = NULL, logPrices, testTimes = seq(34260, 5760
                     "\nItereatively removing first testing timestamps until this is no longer the case.",
                     "\nRemoved the first", pad, "entries from testTimes and replacing with a 0\n"))
     }
+    
+    if(length(testTimes) == 0){
+      stop("No testing done, the mandated testing times were all too soon after market open. 
+           A five second minimum wait is put in as a safe-guard to prevent inputs that may cause crashes.")
+    }
+    
+    
   }
   if(max(testTimes)>max(timestamps) + 900){
     testTimes = testTimes[-length(testTimes)]
     removedFromEnd = 1
-    while(max(testTimes)>max(timestamps) + 900){
+    while(max(testTimes) >= max(timestamps) + 900){
       testTimes = testTimes[-length(testTimes)]  
       removedFromEnd = removedFromEnd + 1
     }
@@ -83,9 +90,9 @@ driftBursts = function(timestamps = NULL, logPrices, testTimes = seq(34260, 5760
           This causes fatal errors (and crashes if paralellized) and is thus disallowed")
   }
   ###Checks end###
-  
-  vpreAveraged         = rep(0, iT - 1)
+  vpreAveraged = rep(0, iT - 1)
   vpreAveraged[(k*2 - 1):(iT - 1)] = cfilter(x = logPrices, c(rep(1,k),rep( -1,k)))[k:(iT - k)]
+  
   if(parallelize & !is.na(nCores)){ #Parallel evaluation or not?
     lDriftBursts = DriftBurstLoopCPAR(vpreAveraged, vDiff, timestamps, testTimes, meanBandwidth, 
                                      varianceBandwidth, preAverage, ACLag, nCores)
